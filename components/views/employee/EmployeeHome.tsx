@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { TimeRecord, Employee, EmployeeService } from '../../../services/EmployeeService';
+import { TimeRecord, Employee, Job, EmployeeService } from '../../../services/EmployeeService';
 import { translations } from '../../../utils/translations';
 import { Language } from '../../../App';
 
@@ -28,10 +28,19 @@ export const EmployeeHome: React.FC<EmployeeHomeProps> = ({
 
   const mapRef = useRef<HTMLDivElement>(null);
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [pendingAssignments, setPendingAssignments] = useState<Job[]>([]);
 
-  const pendingAssignments = useMemo(() => {
-    return EmployeeService.getAssignments(user.id).filter(a => a.status === 'PENDING');
-  }, [user.id, refreshTrigger]);
+
+  useEffect(() => {
+  const loadAssignments = async () => {
+    const assignments = await EmployeeService.getAssignments(user.id);
+    const pending = assignments.filter(a => a.status === 'PENDING');
+    setPendingAssignments(pending);
+  };
+
+  loadAssignments();
+}, [user.id, refreshTrigger]);
+
 
   const handleAssignmentStatus = (id: string, status: 'ACCEPTED' | 'REJECTED') => {
     EmployeeService.updateAssignmentStatus(id, status);

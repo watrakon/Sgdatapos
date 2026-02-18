@@ -67,7 +67,14 @@ export interface Job {
   date: string;
   customerName: string;
   activity: string;
-  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'DONE';
+  status: 
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'DONE'
+  | 'PENDING'
+  | 'ACCEPTED'
+  | 'REJECTED';
+
   remark: string;
   packingList?: any;   // ✅ เพิ่มบรรทัดนี้
 }
@@ -207,6 +214,21 @@ saveFieldServiceJob: async (currentUser: any, companions: string[], data: any) =
     jobs = jobs.filter(j => j.id !== jobId);
     localStorage.setItem("SGDATA_JOBS", JSON.stringify(jobs));
   },
+
+async getAssignments(employeeId: string): Promise<Job[]> {
+  const jobs = EmployeeService.getJobs();
+  return jobs.filter(j => j.employeeId === employeeId);
+},
+updateAssignmentStatus(id: string, status: 'ACCEPTED' | 'REJECTED') {
+  const jobs = EmployeeService.getJobs();
+  const index = jobs.findIndex(j => j.id === id);
+  if (index !== -1) {
+    jobs[index].status = status;
+    localStorage.setItem("SGDATA_JOBS", JSON.stringify(jobs));
+  }
+},
+
+
 
   // ---------------- HELPERS ----------------
 
