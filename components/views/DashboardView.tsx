@@ -44,12 +44,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ isCheckedIn, allEm
     return { total: todayJobs.length, done: todayJobs.filter(j => j.status === 'DONE').length };
   }, [jobs, isHR, user.id, todayStr]);
 
-  const leaveRequests = useMemo(() => EmployeeService.getAllLeaveRequests(), []);
-  const otRequests = useMemo(() => EmployeeService.getAllOTRequests(), []);
+  const leaveRequests = useMemo<any[]>(() => 
+  EmployeeService.getAllLeaveRequests(), 
+[]);
+
+const otRequests = useMemo<any[]>(() => 
+  EmployeeService.getAllOTRequests(), 
+[]);
+
 
   // ดึงข้อมูลคำขอของ User ปัจจุบันเพื่อนำไปคำนวณใน My Requests
-  const myLeaves = useMemo(() => EmployeeService.getLeaveRequests(user.id), [user.id]);
-  const myOTs = useMemo(() => EmployeeService.getOTRequests(user.id), [user.id]);
+  const myLeaves = useMemo(() => 
+      EmployeeService.getLeaveRequests().filter((l: any) => l.employeeId === user.id), 
+[user.id]);
+
+   const myOTs = useMemo(() => 
+      EmployeeService.getOTRequests().filter((o: any) => o.employeeId === user.id), 
+[user.id]);
+
 
   const leaveCountToday = useMemo(() => {
     return leaveRequests.filter(r => r.status === 'APPROVED' && todayStr >= r.startDate && todayStr <= r.endDate).length;
@@ -88,12 +100,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ isCheckedIn, allEm
     const approvedJob = jobs.filter(j => j.employeeId === user.id && j.id.startsWith('REQ_MERGE_') && j.status === 'IN_PROGRESS').length;
 
     // 2. Leaves
-    const pendingLeave = myLeaves.filter(l => l.status === 'PENDING').length;
-    const approvedLeave = myLeaves.filter(l => l.status === 'APPROVED').length;
+    const pendingLeave = myLeaves.filter((l: any) => l.status === 'PENDING').length;
+    const approvedLeave = myLeaves.filter((l: any) => l.status === 'APPROVED').length;
+
 
     // 3. OT
-    const pendingOT = myOTs.filter(o => o.status === 'PENDING').length;
-    const approvedOT = myOTs.filter(o => o.status === 'APPROVED').length;
+    const pendingOT = myOTs.filter((o: any) => o.status === 'PENDING').length;
+    const approvedOT = myOTs.filter((o: any) => o.status === 'APPROVED').length;
 
     return { 
         pending: pendingJob + pendingLeave + pendingOT, 
@@ -119,19 +132,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ isCheckedIn, allEm
     })));
 
     // Add Leaves
-    const relevantLeaves = myLeaves.filter(l => openRequestType === 'PENDING' ? l.status === 'PENDING' : l.status === 'APPROVED');
-    list.push(...relevantLeaves.map(l => ({
+    const relevantLeaves = myLeaves.filter((l: any) => openRequestType === 'PENDING' ? l.status === 'PENDING' : l.status === 'APPROVED');
+    list.push(...relevantLeaves.map((l: any) => ({
         id: l.id,
         type: 'LEAVE',
-        title: lang === 'TH' ? `ขอลางาน: ${t[`req_leave_${l.type.toLowerCase()}` as any] || l.type}` : `Leave Request: ${l.type}`,
+        title: lang === 'TH' ? `ขอลางาน: ${(t as any)[`req_leave_${l.type.toLowerCase()}`] || l.type}` : `Leave Request: ${l.type}`,
         subtitle: `${l.days} ${lang === 'TH' ? 'วัน' : 'Days'} (${new Date(l.startDate).toLocaleDateString()} - ${new Date(l.endDate).toLocaleDateString()})`,
         date: l.startDate,
         remark: l.reason
     })));
 
     // Add OT
-    const relevantOTs = myOTs.filter(o => openRequestType === 'PENDING' ? o.status === 'PENDING' : o.status === 'APPROVED');
-    list.push(...relevantOTs.map(o => ({
+    const relevantOTs = myOTs.filter((o: any) => openRequestType === 'PENDING' ? o.status === 'PENDING' : o.status === 'APPROVED');
+    list.push(...relevantOTs.map((o: any) => ({
         id: o.id,
         type: 'OT',
         title: lang === 'TH' ? 'ขอทำ OT' : 'OT Request',
@@ -155,7 +168,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ isCheckedIn, allEm
     return { leave: leavePending, ot: otPending, job: jobPending };
   }, [leaveRequests, otRequests, jobs]);
 
-  const dailySessions = useMemo(() => EmployeeService.getDailySessions(), []);
 
   return (
     <div className="w-full flex flex-col gap-6 lg:gap-8 animate-in pb-10">
@@ -285,7 +297,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ isCheckedIn, allEm
                {displayedEmployees.map((emp) => {
                    const empHistory = EmployeeService.getTimeHistory(emp.email);
                    const todayCheckIn = empHistory.find(r => r.type === 'CHECK_IN' && new Date(r.timestamp).toDateString() === todayDateString);
-                   const empSession = dailySessions.find(s => s.employeeId === emp.id && s.date === todayStr);
+                  const empSession: any = undefined;
                    const activeJob = jobs.find(j => 
                        j.employeeId === emp.id && 
                        j.date === todayStr && 

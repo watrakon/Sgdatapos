@@ -228,6 +228,85 @@ updateAssignmentStatus(id: string, status: 'ACCEPTED' | 'REJECTED') {
   }
 },
 
+// ---------------- LEAVE ----------------
+
+getAllLeaveRequests() {
+  const saved = localStorage.getItem("SGDATA_LEAVES");
+  return saved ? JSON.parse(saved) : [];
+},
+
+saveLeaveRequest(request: any) {
+  const leaves = EmployeeService.getAllLeaveRequests();
+  leaves.push(request);
+  localStorage.setItem("SGDATA_LEAVES", JSON.stringify(leaves));
+},
+
+updateLeaveStatus(id: string, status: string) {
+  const leaves = EmployeeService.getAllLeaveRequests();
+  const index = leaves.findIndex((l: any) => l.id === id);
+  if (index !== -1) {
+    leaves[index].status = status;
+    localStorage.setItem("SGDATA_LEAVES", JSON.stringify(leaves));
+  }
+},
+
+// ---------------- OT REQUESTS ----------------
+
+getAllOTRequests() {
+  const saved = localStorage.getItem("SGDATA_OT");
+  return saved ? JSON.parse(saved) : [];
+},
+
+getOTRequests() {
+  return EmployeeService.getAllOTRequests();
+},
+
+saveOTRequest(request: any) {
+  const ots = EmployeeService.getOTRequests();
+  ots.push(request);
+  localStorage.setItem("SGDATA_OT", JSON.stringify(ots));
+},
+
+updateOTStatus(id: string, status: string) {
+  const ots = EmployeeService.getOTRequests();
+  const index = ots.findIndex((o: any) => o.id === id);
+
+  if (index !== -1) {
+    ots[index].status = status;
+    localStorage.setItem("SGDATA_OT", JSON.stringify(ots));
+  }
+},
+
+
+
+// ---------------- HOLIDAYS ----------------
+
+getUploadedHolidays() {
+  const saved = localStorage.getItem("SGDATA_HOLIDAYS");
+  return saved ? JSON.parse(saved) : [];
+},
+
+saveHoliday(holiday: any) {
+  const holidays = EmployeeService.getUploadedHolidays();
+  holidays.push(holiday);
+  localStorage.setItem("SGDATA_HOLIDAYS", JSON.stringify(holidays));
+},
+
+deleteHoliday(id: string) {
+  let holidays = EmployeeService.getUploadedHolidays();
+  holidays = holidays.filter((h: any) => h.id !== id);
+  localStorage.setItem("SGDATA_HOLIDAYS", JSON.stringify(holidays));
+},
+
+// ---------------- LEAVE REQUESTS ----------------
+
+getLeaveRequests() {
+  const saved = localStorage.getItem("SGDATA_LEAVES");
+  return saved ? JSON.parse(saved) : [];
+},
+
+
+
 
 
   // ---------------- HELPERS ----------------
