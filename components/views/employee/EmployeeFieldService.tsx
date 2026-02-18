@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Employee, EmployeeService, PackingList, Job } from '../../../services/EmployeeService';
+import { Employee, EmployeeService, Job, PackingList }
+from '../../../services/EmployeeService';
 import { translations } from '../../../utils/translations';
 import { Language } from '../../../App';
 
