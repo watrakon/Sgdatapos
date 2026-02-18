@@ -44,10 +44,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, lang, onLangToggl
     setError(null);
     setIsLoading(true);
     try {
-      const employee = await EmployeeService.authenticate(email, password);
+      const employee = await EmployeeService.login(email, password);
       if (employee) {
         EmployeeService.saveCredentials(email, password, rememberMe);
-        EmployeeService.saveLoginSession(employee.id, team);
         onLogin(employee, team);
       } else {
         setError(t.errorAuth || (lang === 'TH' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : 'Invalid email or password'));
