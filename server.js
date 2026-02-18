@@ -5,23 +5,14 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
+
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// --- การตั้งค่าการเชื่อมต่อ XAMPP MySQL ---
-const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '', // ค่าเริ่มต้นของ XAMPP คือว่างเปล่า
-    database: 'employee_name',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-};
+const pool = mysql.createPool(process.env.DATABASE_URL);
 
-const pool = mysql.createPool(dbConfig);
 
 // ตรวจสอบการเชื่อมต่อกับ XAMPP
 pool.getConnection((err, conn) => {
