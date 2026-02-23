@@ -50,6 +50,28 @@ export interface PackingList {
   };
 }
 
+export interface AssignedTask {
+  id: string;
+  assignerId: string;
+  employeeId: string;
+  date: string;
+  time: string;
+  customerName: string;
+  activity: string;
+  remark: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  timestamp: string;
+}
+
+
+export interface EasyPassActivity {
+  id: string;
+  type: 'TOPUP' | 'PAYMENT';
+  location: string;
+  category: string;
+  amount: number;
+  timestamp: string;
+}
 
 export interface TimeRecord {
   id: string;
@@ -60,6 +82,8 @@ export interface TimeRecord {
   location: string;
   coords: { latitude: number; longitude: number } | null;
 }
+
+
 
 export interface Job {
   id: string;
@@ -79,8 +103,44 @@ export interface Job {
   packingList?: any;   // ✅ เพิ่มบรรทัดนี้
 }
 
+export interface LeaveRequest {
+  id: string;
+  employeeId: string;
+  type: 'SICK' | 'BUSINESS' | 'VACATION';
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  timestamp: string;
+
+  coordinatorId?: string;
+  coordinatorStatus?: 
+    | 'PENDING' 
+    | 'APPROVED' 
+    | 'REJECTED'
+    | 'ACCEPTED';   // ✅ เพิ่มบรรทัดนี้
+}
+
+export interface OTRequest {
+  id: string;
+  employeeId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  timestamp: string;   // ✅ เพิ่ม
+}
 
 export const EmployeeService = {
+
+
+
+getDailySessions() {
+  const saved = localStorage.getItem("SGDATA_SESSIONS");
+  return saved ? JSON.parse(saved) : [];
+},
 
 
   // ---------------- EMPLOYEES ----------------
@@ -114,6 +174,7 @@ export const EmployeeService = {
     });
     return await res.json();
   },
+  
 
   // ---------------- AUTH ----------------
 
@@ -192,6 +253,19 @@ saveFieldServiceJob: async (currentUser: any, companions: string[], data: any) =
       .filter(item => item.record !== undefined);
   },
 
+  
+updateAssignmentStatus(
+  id: string,
+  status: 'ACCEPTED' | 'REJECTED'
+) {
+  const jobs = this.getJobs();   // ดึงงานทั้งหมด
+  const index = jobs.findIndex((j: any) => j.id === id);
+
+  if (index !== -1) {
+    jobs[index].status = status;
+    localStorage.setItem("SGDATA_JOBS", JSON.stringify(jobs));
+  }
+},
   // ---------------- JOB ----------------
 
   getJobs(): Job[] {
@@ -215,35 +289,85 @@ saveFieldServiceJob: async (currentUser: any, companions: string[], data: any) =
     localStorage.setItem("SGDATA_JOBS", JSON.stringify(jobs));
   },
 
-async getAssignments(employeeId: string): Promise<Job[]> {
-  const jobs = EmployeeService.getJobs();
-  return jobs.filter(j => j.employeeId === employeeId);
+  // ---------------- ASSIGNMENTS ----------------
+
+getAssignments(employeeId: string): AssignedTask[] {
+  const saved = localStorage.getItem("SGDATA_ASSIGNMENTS");
+  const list: AssignedTask[] = saved ? JSON.parse(saved) : [];
+  return list.filter(a => a.employeeId === employeeId);
 },
-updateAssignmentStatus(id: string, status: 'ACCEPTED' | 'REJECTED') {
-  const jobs = EmployeeService.getJobs();
-  const index = jobs.findIndex(j => j.id === id);
-  if (index !== -1) {
-    jobs[index].status = status;
-    localStorage.setItem("SGDATA_JOBS", JSON.stringify(jobs));
+
+saveAssignment(task: AssignedTask) {
+  const saved = localStorage.getItem("SGDATA_ASSIGNMENTS");
+  const list: AssignedTask[] = saved ? JSON.parse(saved) : [];
+
+  list.push(task);
+  localStorage.setItem("SGDATA_ASSIGNMENTS", JSON.stringify(list));
+},
+
+deleteAssignment(id: string) {
+  const saved = localStorage.getItem("SGDATA_ASSIGNMENTS");
+  let list: AssignedTask[] = saved ? JSON.parse(saved) : [];
+
+  list = list.filter(a => a.id !== id);
+  localStorage.setItem("SGDATA_ASSIGNMENTS", JSON.stringify(list));
+},
+
+async saveEmployee(emp: Employee): Promise<boolean> {
+  try {
+    if (!emp.id) return false;
+
+    // ถ้ามี id อยู่แล้ว = update
+    const existing = await this.getAllEmployees();
+    const found = existing.find(e => e.id === emp.id);
+
+    if (found) {
+      await this.updateEmployee(emp.id, emp);
+    } else {
+      await this.addEmployee(emp);
+    }
+
+    return true;
+  } catch (err) {
+    console.error("saveEmployee error:", err);
+    return false;
   }
+},
+
+
+// ---------------- EASY PASS ----------------
+
+getEasyPassActivities(): EasyPassActivity[] {
+  const saved = localStorage.getItem("SGDATA_EASYPASS");
+  return saved ? JSON.parse(saved) : [];
+},
+
+saveEasyPassActivity(activity: EasyPassActivity) {
+  const list = EmployeeService.getEasyPassActivities();
+  list.push(activity);
+  localStorage.setItem("SGDATA_EASYPASS", JSON.stringify(list));
 },
 
 // ---------------- LEAVE ----------------
 
-getAllLeaveRequests() {
+getAllLeaveRequests(): LeaveRequest[] {
   const saved = localStorage.getItem("SGDATA_LEAVES");
   return saved ? JSON.parse(saved) : [];
 },
 
-saveLeaveRequest(request: any) {
+saveLeaveRequest(request: LeaveRequest) {
   const leaves = EmployeeService.getAllLeaveRequests();
   leaves.push(request);
   localStorage.setItem("SGDATA_LEAVES", JSON.stringify(leaves));
 },
 
-updateLeaveStatus(id: string, status: string) {
+updateLeaveStatus(
+  id: string,
+  status: LeaveRequest['status']
+) {
   const leaves = EmployeeService.getAllLeaveRequests();
-  const index = leaves.findIndex((l: any) => l.id === id);
+  const index = leaves.findIndex(l => l.id === id);
+
   if (index !== -1) {
     leaves[index].status = status;
     localStorage.setItem("SGDATA_LEAVES", JSON.stringify(leaves));
@@ -252,24 +376,25 @@ updateLeaveStatus(id: string, status: string) {
 
 // ---------------- OT REQUESTS ----------------
 
-getAllOTRequests() {
+getAllOTRequests(): OTRequest[] {
   const saved = localStorage.getItem("SGDATA_OT");
   return saved ? JSON.parse(saved) : [];
+},  
+
+getOTRequests(employeeId: string): OTRequest[] {
+  const all = this.getAllOTRequests();
+  return all.filter(o => o.employeeId === employeeId);
 },
 
-getOTRequests() {
-  return EmployeeService.getAllOTRequests();
-},
-
-saveOTRequest(request: any) {
-  const ots = EmployeeService.getOTRequests();
+saveOTRequest(request: OTRequest) {
+  const ots = this.getAllOTRequests();
   ots.push(request);
   localStorage.setItem("SGDATA_OT", JSON.stringify(ots));
 },
 
-updateOTStatus(id: string, status: string) {
-  const ots = EmployeeService.getOTRequests();
-  const index = ots.findIndex((o: any) => o.id === id);
+updateOTStatus(id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED') {
+  const ots = this.getAllOTRequests();
+  const index = ots.findIndex(o => o.id === id);
 
   if (index !== -1) {
     ots[index].status = status;
@@ -281,46 +406,42 @@ updateOTStatus(id: string, status: string) {
 
 // ---------------- HOLIDAYS ----------------
 
-getUploadedHolidays() {
+getUploadedHolidays(): any[] {
   const saved = localStorage.getItem("SGDATA_HOLIDAYS");
   return saved ? JSON.parse(saved) : [];
 },
 
-saveHoliday(holiday: any) {
-  const holidays = EmployeeService.getUploadedHolidays();
-  holidays.push(holiday);
+saveUploadedHolidays(holidays: any[]) {
   localStorage.setItem("SGDATA_HOLIDAYS", JSON.stringify(holidays));
 },
 
-deleteHoliday(id: string) {
-  let holidays = EmployeeService.getUploadedHolidays();
-  holidays = holidays.filter((h: any) => h.id !== id);
-  localStorage.setItem("SGDATA_HOLIDAYS", JSON.stringify(holidays));
+clearUploadedHolidays() {
+  localStorage.removeItem("SGDATA_HOLIDAYS");
 },
 
 // ---------------- LEAVE REQUESTS ----------------
 
-getLeaveRequests() {
+getLeaveRequests(employeeId: string): LeaveRequest[] {
   const saved = localStorage.getItem("SGDATA_LEAVES");
-  return saved ? JSON.parse(saved) : [];
+  const list: LeaveRequest[] = saved ? JSON.parse(saved) : [];
+  return list.filter(l => l.employeeId === employeeId);
 },
-
 
 
 
 
   // ---------------- HELPERS ----------------
 
-  saveCredentials(email: string, pass: string, remember: boolean) {
-    if (remember)
-      localStorage.setItem("REMEMBER_ME", JSON.stringify({ email, pass }));
-    else
-      localStorage.removeItem("REMEMBER_ME");
-  },
+saveCredentials(email: string, pass: string, remember: boolean) {
+  if (remember)
+    localStorage.setItem("REMEMBER_ME", JSON.stringify({ email, pass }));
+  else
+    localStorage.removeItem("REMEMBER_ME");
+},
 
-  getSavedCredentials() {
-    const saved = localStorage.getItem("REMEMBER_ME");
-    return saved ? JSON.parse(saved) : null;
-  }
+getSavedCredentials() {
+  const saved = localStorage.getItem("REMEMBER_ME");
+  return saved ? JSON.parse(saved) : null;
+}
 
-};
+};   // ← ปิด object

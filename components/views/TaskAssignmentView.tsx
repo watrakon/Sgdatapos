@@ -36,8 +36,13 @@ export const TaskAssignmentView: React.FC<TaskAssignmentViewProps> = ({ user, al
   const bodyCls = lang === 'TH' ? 'font-prompt font-normal' : 'font-montserrat font-normal';
 
   useEffect(() => {
-    setAssignments(EmployeeService.getAssignments());
-  }, []);
+  const loadAssignments = async () => {
+    const data = await EmployeeService.getAssignments(user.id);
+    setAssignments(data);
+  };
+
+  loadAssignments();
+}, [user.id]);
 
   const toggleEmployee = (id: string) => {
     setForm(prev => {
@@ -57,46 +62,54 @@ export const TaskAssignmentView: React.FC<TaskAssignmentViewProps> = ({ user, al
     setForm(prev => ({ ...prev, employeeIds: [] }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form.employeeIds.length === 0) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (form.employeeIds.length === 0) return;
 
-    form.employeeIds.forEach(empId => {
-      const newTask: AssignedTask = {
-        id: `${Date.now()}_${empId}`,
-        assignerId: user.id,
-        employeeId: empId,
-        date: form.date,
-        time: form.time,
-        customerName: form.customerName,
-        activity: form.activity,
-        remark: form.remark,
-        status: 'PENDING',
-        timestamp: new Date().toISOString()
-      };
-      EmployeeService.saveAssignment(newTask);
-    });
+  for (const empId of form.employeeIds) {
+    const newTask: AssignedTask = {
+      id: `${Date.now()}_${empId}`,
+      assignerId: user.id,
+      employeeId: empId,
+      date: form.date,
+      time: form.time,
+      customerName: form.customerName,
+      activity: form.activity,
+      remark: form.remark,
+      status: 'PENDING',
+      timestamp: new Date().toISOString()
+    };
 
-    setAssignments(EmployeeService.getAssignments());
-    setIsModalOpen(false);
-    setForm({
-      employeeIds: [],
-      date: new Date().toISOString().split('T')[0],
-      time: '09:00',
-      customerName: '',
-      activity: '',
-      remark: ''
-    });
-    setStatusMsg(t.assign_success);
-    setTimeout(() => setStatusMsg(''), 3000);
-  };
+    await EmployeeService.saveAssignment(newTask);
+  }
 
-  const handleDelete = (id: string) => {
-    if (window.confirm(lang === 'TH' ? 'ยืนยันการยกเลิกการมอบหมาย?' : 'Confirm cancel assignment?')) {
-      EmployeeService.deleteAssignment(id);
-      setAssignments(EmployeeService.getAssignments());
-    }
-  };
+  const updated = await EmployeeService.getAssignments(user.id);
+  setAssignments(updated);
+
+  setIsModalOpen(false);
+  setForm({
+    employeeIds: [],
+    date: new Date().toISOString().split('T')[0],
+    time: '09:00',
+    customerName: '',
+    activity: '',
+    remark: ''
+  });
+
+  setStatusMsg(t.assign_success);
+  setTimeout(() => setStatusMsg(''), 3000);
+};
+
+  const handleDelete = async (id: string) => {
+  if (window.confirm(lang === 'TH'
+      ? 'ยืนยันการยกเลิกการมอบหมาย?'
+      : 'Confirm cancel assignment?')) {
+
+    await EmployeeService.deleteAssignment(id);
+    const updated = await EmployeeService.getAssignments(user.id);
+    setAssignments(updated);
+  }
+};
 
   return (
     <div className="w-full flex flex-col gap-8 animate-in pb-10">

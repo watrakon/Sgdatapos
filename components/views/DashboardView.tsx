@@ -55,11 +55,11 @@ const otRequests = useMemo<any[]>(() =>
 
   // ดึงข้อมูลคำขอของ User ปัจจุบันเพื่อนำไปคำนวณใน My Requests
   const myLeaves = useMemo(() => 
-      EmployeeService.getLeaveRequests().filter((l: any) => l.employeeId === user.id), 
+      EmployeeService.getAllLeaveRequests().filter((l: any) => l.employeeId === user.id), 
 [user.id]);
 
    const myOTs = useMemo(() => 
-      EmployeeService.getOTRequests().filter((o: any) => o.employeeId === user.id), 
+      EmployeeService.getAllOTRequests().filter((o: any) => o.employeeId === user.id), 
 [user.id]);
 
 

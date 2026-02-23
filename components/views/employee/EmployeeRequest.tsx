@@ -14,6 +14,8 @@ interface EmployeeRequestProps {
   activeTab: 'LEAVE' | 'OT';
 }
 
+
+
 const CustomDatePicker = ({ value, onChange, lang, min }: { value: string, onChange: (val: string) => void, lang: Language, min?: string }) => {
   const headCls = lang === 'TH' ? 'font-prompt font-bold' : 'font-montserrat font-bold';
   const displayDate = useMemo(() => {
@@ -208,11 +210,17 @@ export const EmployeeRequest: React.FC<EmployeeRequestProps> = ({ user, lang, al
                             stats.count += 1; 
                         } 
                     });
+                    const leaveLabelMap = {
+                        SICK: 'req_leave_sick',
+                        BUSINESS: 'req_leave_business',
+                        VACATION: 'req_leave_vacation'
+                        } as const;
+                
                     return (
                         <div key={policy.type} className="bg-white rounded-[35px] border border-slate-100 p-8 shadow-sm flex flex-col relative overflow-hidden group hover:shadow-xl transition-all">
                             <div className="flex flex-col items-center text-center">
                                 <div className="text-4xl mb-3">{policy.emoji}</div>
-                                <h3 className={`text-2xl text-charcoal mb-1 ${headCls}`}>{t[`req_leave_${policy.type.toLowerCase() as any}` as any]}</h3>
+                                <h3 className={`text-2xl text-charcoal mb-1 ${headCls}`}>{t[leaveLabelMap[policy.type]]}</h3>
                                 <div className="flex items-baseline gap-2 mb-4">
                                     <span className="text-5xl font-bold text-slate-200 group-hover:text-charcoal transition-colors">{policy.entitled}</span>
                                     <span className="text-slate-400 font-bold text-sm">{lang === 'TH' ? 'วัน' : 'days'}</span>

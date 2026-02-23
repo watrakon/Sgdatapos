@@ -52,11 +52,11 @@ export const RequestView: React.FC<RequestViewProps> = ({ user, lang, initialTab
 
   const handleUpdateStatus = (type: 'LEAVE' | 'OT' | 'JOBS', id: string, status: 'APPROVED' | 'REJECTED') => {
     if (type === 'LEAVE') {
-      const allLeaves = EmployeeService.getAllLeaveRequests();
+      const allLeaves: LeaveRequest[] = EmployeeService.getAllLeaveRequests();
       const req = allLeaves.find(r => r.id === id);
       if (req) EmployeeService.saveLeaveRequest({ ...req, status });
     } else if (type === 'OT') {
-      const allOTs = EmployeeService.getAllOTRequests();
+      const allOTs: OTRequest[] = EmployeeService.getAllOTRequests();
       const req = allOTs.find(r => r.id === id);
       if (req) EmployeeService.saveOTRequest({ ...req, status });
     } else if (type === 'JOBS') {
